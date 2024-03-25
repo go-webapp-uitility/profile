@@ -32,29 +32,31 @@ func NewDefaultYamlConfigurationMapper[ConfigFileType any]() Mapper[ConfigFileTy
 }
 
 func (m Mapper[ConfigFileType]) Map() (ConfigFileType, error) {
-	var emptyConf ConfigFileType
+	var emptyConfig ConfigFileType
 	var config ConfigFileType
-	fullPath := mapper.FullFilePath(m.directoryPath, m.fileName, "", "", extension)
-	file, err := readYamlFile(fullPath)
-	if err != nil {
-		return emptyConf, err
-	}
-	if err = yaml.Unmarshal(file, &config); err != nil {
-		return emptyConf, err
+
+	if err := m.mapFileContents(&config, "", ""); err != nil {
+		return emptyConfig, err
 	}
 	if m.phase == "" {
 		return config, nil
 	}
-	// 중복 코드 제거 필요
-	fullPath = mapper.FullFilePath(m.directoryPath, m.fileName, m.profileDelimiter, m.phase, extension)
-	file, err = readYamlFile(fullPath)
-	if err != nil {
-		return emptyConf, err
-	}
-	if err = yaml.Unmarshal(file, &config); err != nil {
-		return emptyConf, err
+	if err := m.mapFileContents(&config, m.profileDelimiter, m.phase); err != nil {
+		return emptyConfig, err
 	}
 	return config, nil
+}
+
+func (m Mapper[ConfigFileType]) mapFileContents(config *ConfigFileType, delimiter, phase string) error {
+	fullPath := mapper.FullFilePath(m.directoryPath, m.fileName, delimiter, phase, extension)
+	file, err := readYamlFile(fullPath)
+	if err != nil {
+		return err
+	}
+	if err = yaml.Unmarshal(file, &config); err != nil {
+		return err
+	}
+	return nil
 }
 
 func readYamlFile(fullPath string) ([]byte, error) {
