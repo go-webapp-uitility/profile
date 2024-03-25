@@ -1,0 +1,10 @@
+test:
+  string: hello-defaultr
+  number: 1234
+  array:
+    - a
+    - b
+    - c
+  st:
+    top: tmp
+    bottom: b
